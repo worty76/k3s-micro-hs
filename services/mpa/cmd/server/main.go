@@ -9,6 +9,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/worty76/k3s-micro-hs/services/mpa/internal/adapters"
+	"github.com/worty76/k3s-micro-hs/services/mpa/internal/ports"
 )
 
 func main() {
@@ -41,6 +42,10 @@ func main() {
 	// Wait for SIGTERM/SIGINT or component failure.
 	<-ctx.Done()
 
+	shutdown(e, mqttClient)
+}
+
+func shutdown(e *echo.Echo, mqttClient ports.InboundAdapter) {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
