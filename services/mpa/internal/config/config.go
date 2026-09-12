@@ -25,14 +25,16 @@ type ServerConfig struct {
 	Port int `mapstructure:"SERVER_PORT"`
 }
 
-var Default = struct {
+type DefaultConfig struct {
 	SERVER_PORT int
 	DB_HOST     string
 	DB_PORT     int
 	DB_USER     string
 	DB_PASSWORD string
 	DB_NAME     string
-}{
+}
+
+var Default = DefaultConfig{
 	SERVER_PORT: 8080,
 	DB_HOST:     "localhost",
 	DB_PORT:     5432,

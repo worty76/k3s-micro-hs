@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/worty76/k3s-micro-hs/libs/common/env"
+	"github.com/worty76/k3s-micro-hs/libs/common/logger"
 	"github.com/worty76/k3s-micro-hs/services/mpa/internal/adapters"
 	"github.com/worty76/k3s-micro-hs/services/mpa/internal/ports"
 )
@@ -18,6 +20,13 @@ func main() {
 
 	e := echo.New()
 
+	currentEnv := env.Environment(os.Getenv("env"))
+
+	// Initialize logger
+	appLogger := logger.NewZap(currentEnv)
+
+	appLogger.Info("Starting MPA service...")
+
 	// Initialize factory
 	factory := adapters.NewFactory()
 	mqttClient, err := factory.CreateAdapter(adapters.ProtocolMQTT)
@@ -25,37 +34,46 @@ func main() {
 		panic(err)
 	}
 
+	g, groupCtx := errgroup.withContext(ctx)
+
 	// Start the MQTT client
-	go func() {
-		if err := mqttClient.Start(ctx); err != nil {
-			panic(err)
-		}
-	}()
+	g.Go(func() error {
+		appLogger.Info("Starting MQTT client...")
+		return mqttClient.Start(groupCtx)
+	})
 
 	// Start the HTTP server
-	go func() {
-		if err := e.Start(":8080"); err != nil {
+	g.Go(func() error {
+		appLogger.Info("Starting HTTP server on port 8080...")
+		return e.Start(":8080")
+	})
+
+	// // Wait for SIGTERM/SIGINT or component failure.
+	// <-ctx.Done()
+
+	g.Go(func() error {
+		<-groupCtx.Done()
+		appLogger.Info("Context canceled, shutting down...")
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		// Gracefully shutdown the server
+		if err := e.Shutdown(shutdownCtx); err != nil {
+			appLogger.Error("Error occurred while shutting down server", logger.Field{Key: "error", Value: err})
 			panic(err)
 		}
-	}()
 
-	// Wait for SIGTERM/SIGINT or component failure.
-	<-ctx.Done()
-
-	shutdown(e, mqttClient)
+		// And then shutdown the other adapters
+		shutdown(shutdownCtx, e, mqttClient, appLogger)
+		return nil
+	})
 }
 
-func shutdown(e *echo.Echo, mqttClient ports.InboundAdapter) {
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	// Gracefully shutdown the server
-	if err := e.Shutdown(shutdownCtx); err != nil {
-		panic(err)
-	}
-
+func shutdown(shutdownCtx context.Context, e *echo.Echo, mqttClient ports.InboundAdapter, appLogger logger.Logger) {
 	// Gracefully stop the MQTT client
 	if err := mqttClient.Shutdown(shutdownCtx); err != nil {
+		appLogger.Error("Error occurred while shutting down MQTT client", logger.Field{Key: "error", Value: err})
 		panic(err)
 	}
 }
