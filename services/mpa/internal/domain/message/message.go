@@ -9,6 +9,9 @@ const (
 	MessageTypeEvent     MessageType = "event"
 	MessageTypeCommand   MessageType = "command"
 	MessageTypeAck       MessageType = "ack"
+
+	DirectionUplink   = "uplink"
+	DirectionDownlink = "downlink"
 )
 
 type Message struct {

@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: mpa
+  namespace: default
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: mpa
+
+  template:
+    metadata:
+      labels:
+        app: mpa
+
+    spec:
+      containers:
+        - name: mpa
+          image: mpa:dev
+          imagePullPolicy: Never
+          env:
+            - name: MQTT_BROKER
+              value: "emqx"
+            - name: MQTT_PORT
+              value: "1883"
+            - name: MQTT_TOPICS
+              value: "topic1,topic2"
+            - name: MQTT_CLIENT_ID
+              value: "mpa-client"

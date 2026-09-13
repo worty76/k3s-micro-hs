@@ -3,6 +3,7 @@ module github.com/worty76/k3s-micro-hs/services/mpa
 go 1.27.0
 
 require (
+	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/labstack/echo/v4 v4.15.4
 	github.com/spf13/viper v1.21.0
 	github.com/worty76/k3s-micro-hs/libs v0.0.0-00010101000000-000000000000
@@ -13,6 +14,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/gofrs/uuid v4.4.0+incompatible // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/labstack/gommon v0.5.0 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
