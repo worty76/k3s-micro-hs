@@ -6,6 +6,7 @@ require (
 	github.com/labstack/echo/v4 v4.15.4
 	github.com/spf13/viper v1.21.0
 	github.com/worty76/k3s-micro-hs/libs v0.0.0-00010101000000-000000000000
+	golang.org/x/sync v0.23.0
 )
 
 require (

@@ -11,7 +11,7 @@ import (
 	"github.com/worty76/k3s-micro-hs/libs/common/env"
 	"github.com/worty76/k3s-micro-hs/libs/common/logger"
 	"github.com/worty76/k3s-micro-hs/services/mpa/internal/adapters"
-	"github.com/worty76/k3s-micro-hs/services/mpa/internal/ports"
+	"golang.org/x/sync/errgroup"
 )
 
 func main() {
@@ -34,7 +34,7 @@ func main() {
 		panic(err)
 	}
 
-	g, groupCtx := errgroup.withContext(ctx)
+	g, groupCtx := errgroup.WithContext(ctx)
 
 	// Start the MQTT client
 	g.Go(func() error {
@@ -70,7 +70,7 @@ func main() {
 	})
 }
 
-func shutdown(shutdownCtx context.Context, e *echo.Echo, mqttClient ports.InboundAdapter, appLogger logger.Logger) {
+func shutdown(shutdownCtx context.Context, e *echo.Echo, mqttClient adapters.Runnable, appLogger logger.Logger) {
 	// Gracefully stop the MQTT client
 	if err := mqttClient.Shutdown(shutdownCtx); err != nil {
 		appLogger.Error("Error occurred while shutting down MQTT client", logger.Field{Key: "error", Value: err})

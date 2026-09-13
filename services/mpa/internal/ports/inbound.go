@@ -1,8 +1,11 @@
 package ports
 
-import "context"
+import (
+	"context"
 
-type InboundAdapter interface {
-	Start(ctx context.Context) error
-	Shutdown(ctx context.Context) error
+	"github.com/worty76/k3s-micro-hs/services/mpa/internal/domain/message"
+)
+
+type MessageIngestor interface {
+	Ingest(ctx context.Context, msg message.Message) error
 }

@@ -3,9 +3,8 @@ package adapters
 import (
 	"fmt"
 
-	"github.com/worty76/k3s-micro-hs/services/mpa/internal/adapters/http"
-	"github.com/worty76/k3s-micro-hs/services/mpa/internal/adapters/mqtt"
-	"github.com/worty76/k3s-micro-hs/services/mpa/internal/ports"
+	"github.com/worty76/k3s-micro-hs/services/mpa/internal/adapters/transport/http"
+	"github.com/worty76/k3s-micro-hs/services/mpa/internal/adapters/transport/mqtt"
 )
 
 type Protocol string
@@ -22,7 +21,7 @@ func NewFactory() *Factory {
 	return &Factory{}
 }
 
-func (f *Factory) CreateAdapter(protocol Protocol) (ports.InboundAdapter, error) {
+func (f *Factory) CreateAdapter(protocol Protocol) (Runnable, error) {
 	switch protocol {
 	case ProtocolHTTP:
 		return http.NewHTTPAdapter(), nil
