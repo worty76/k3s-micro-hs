@@ -25,19 +25,22 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	currentEnv := env.Environment(os.Getenv("env"))
-	appLogger := logger.NewZap(currentEnv)
-
 	// Load configs
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		appLogger.Fatal("load config", logger.Field{Key: "error", Value: err})
+		fmt.Printf("Failed to load configuration: %v\n", err)
+		os.Exit(1)
 	}
-	appLogger.Info("resolved config",
-		logger.Field{Key: "broker", Value: cfg.Mqtt.Broker},
-		logger.Field{Key: "port", Value: cfg.Mqtt.Port},
-		logger.Field{Key: "topics", Value: cfg.Mqtt.Topics},
-	)
+
+	// Set environment
+	currentEnv := env.Environment(cfg.AppEnv)
+	if !currentEnv.IsValid() {
+		fmt.Printf("Invalid environment: %s\n", currentEnv)
+		os.Exit(1)
+	}
+
+	// Initialize logger
+	appLogger := logger.NewZap(currentEnv)
 
 	appLogger.Info("Starting MPA service...")
 
@@ -60,11 +63,21 @@ func main() {
 
 	mqttMapper := mqtt.NewMapper()
 
+	if cfg.Mqtt.Workers <= 0 {
+		appLogger.Fatal("number of workers must be greater than zero", logger.Field{Key: "workers", Value: cfg.Mqtt.Workers})
+	}
+
+	if cfg.Mqtt.QueueSize <= 0 {
+		appLogger.Fatal("queue size must be greater than zero", logger.Field{Key: "queueSize", Value: cfg.Mqtt.QueueSize})
+	}
+
 	mqttAdapter := mqtt.NewMQTTAdapter(
 		mqttClient,
 		messageIngestor,
 		appLogger,
 		mqttMapper,
+		cfg.Mqtt.Workers,
+		cfg.Mqtt.QueueSize,
 	)
 
 	// Initialize transport adapters
@@ -89,7 +102,7 @@ func main() {
 
 	// Start HTTP server
 	g.Go(func() error {
-		if err := e.Start(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := e.Start(fmt.Sprintf(":%d", cfg.Server.Port)); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			return err
 		}
 		return nil

@@ -5,13 +5,14 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
+	"github.com/worty76/k3s-micro-hs/libs/common/env"
 )
 
 type Config struct {
-	AppEnv   string         `mapstructure:"APP_ENV"`
-	Database DatabaseConfig `mapstructure:",squash"`
-	Server   ServerConfig   `mapstructure:",squash"`
-	Mqtt     MQTTConfig     `mapstructure:",squash"`
+	AppEnv   env.Environment `mapstructure:"APP_ENV"`
+	Database DatabaseConfig  `mapstructure:",squash"`
+	Server   ServerConfig    `mapstructure:",squash"`
+	Mqtt     MQTTConfig      `mapstructure:",squash"`
 }
 
 type DatabaseConfig struct {
@@ -33,11 +34,14 @@ type MQTTConfig struct {
 	Username string `mapstructure:"MQTT_USERNAME"`
 	Password string `mapstructure:"MQTT_PASSWORD"`
 	Topics   string `mapstructure:"MQTT_TOPICS"`
+
+	Workers   int `mapstructure:"MQTT_WORKERS"`
+	QueueSize int `mapstructure:"MQTT_QUEUE_SIZE"`
 }
 
 type DefaultConfig struct {
 	// Server default values
-	APP_ENV     string
+	APP_ENV     env.Environment
 	SERVER_PORT int
 	DB_HOST     string
 	DB_PORT     int
@@ -45,12 +49,14 @@ type DefaultConfig struct {
 	DB_PASSWORD string
 	DB_NAME     string
 	// MQTT default values
-	MQTT_BROKER    string
-	MQTT_PORT      int
-	MQTT_CLIENT_ID string
-	MQTT_USERNAME  string
-	MQTT_PASSWORD  string
-	MQTT_TOPICS    string
+	MQTT_BROKER     string
+	MQTT_PORT       int
+	MQTT_CLIENT_ID  string
+	MQTT_USERNAME   string
+	MQTT_PASSWORD   string
+	MQTT_TOPICS     string
+	MQTT_WORKERS    int
+	MQTT_QUEUE_SIZE int
 }
 
 var Default = DefaultConfig{
@@ -63,12 +69,14 @@ var Default = DefaultConfig{
 	DB_PASSWORD: "highlysecurepassword",
 	DB_NAME:     "k3s_micro_hs",
 	// MQTT default values
-	MQTT_BROKER:    "localhost",
-	MQTT_PORT:      1883,
-	MQTT_CLIENT_ID: "mpa-client",
-	MQTT_USERNAME:  "anonymous",
-	MQTT_PASSWORD:  "123456",
-	MQTT_TOPICS:    "device/+/message,device/+/status",
+	MQTT_BROKER:     "localhost",
+	MQTT_PORT:       1883,
+	MQTT_CLIENT_ID:  "mpa-client",
+	MQTT_USERNAME:   "anonymous",
+	MQTT_PASSWORD:   "123456",
+	MQTT_TOPICS:     "device/+/message,device/+/status",
+	MQTT_WORKERS:    5,
+	MQTT_QUEUE_SIZE: 100,
 }
 
 func LoadConfig() (*Config, error) {
@@ -94,6 +102,10 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
 	}
 
+	if !config.AppEnv.IsValid() {
+		return nil, fmt.Errorf("invalid APP_ENV %q: must be dev, stage, or prod", config.AppEnv)
+	}
+
 	return &config, nil
 }
 
@@ -113,4 +125,6 @@ func setDefaults() {
 	viper.SetDefault("MQTT_USERNAME", Default.MQTT_USERNAME)
 	viper.SetDefault("MQTT_PASSWORD", Default.MQTT_PASSWORD)
 	viper.SetDefault("MQTT_TOPICS", Default.MQTT_TOPICS)
+	viper.SetDefault("MQTT_WORKERS", Default.MQTT_WORKERS)
+	viper.SetDefault("MQTT_QUEUE_SIZE", Default.MQTT_QUEUE_SIZE)
 }
