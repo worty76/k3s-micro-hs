@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/worty76/k3s-micro-hs/libs/canonical"
 	"github.com/worty76/k3s-micro-hs/services/mpa/internal/domain/message"
 )
 
@@ -18,6 +19,6 @@ func (m *Mapper) Map(payload []byte) (message.Message, error) {
 	if err := json.Unmarshal(payload, &msg); err != nil {
 		return message.Message{}, fmt.Errorf("unmarshal mqtt payload: %w", err)
 	}
-	msg.Direction = message.DirectionUplink
+	msg.Direction = canonical.DirectionUplink
 	return msg, nil
 }

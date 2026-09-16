@@ -1,23 +1,5 @@
 package message
 
-import "github.com/worty76/k3s-micro-hs/libs/common/entity"
+import "github.com/worty76/k3s-micro-hs/libs/canonical"
 
-type MessageType string
-
-const (
-	MessageTypeTelemetry MessageType = "telemetry"
-	MessageTypeEvent     MessageType = "event"
-	MessageTypeCommand   MessageType = "command"
-	MessageTypeAck       MessageType = "ack"
-
-	DirectionUplink   = "uplink"
-	DirectionDownlink = "downlink"
-)
-
-type Message struct {
-	entity.BaseEntity
-	Type      string `json:"type"`
-	Payload   string `json:"payload"`
-	Metadata  string `json:"metadata"`
-	Direction string `json:"direction"`
-}
+type Message = canonical.Message
