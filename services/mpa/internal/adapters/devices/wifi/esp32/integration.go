@@ -26,6 +26,14 @@ func (e *ESP32Integration) Name() string {
 	return Esp32IntegrationName
 }
 
+func (e *ESP32Integration) Network() string {
+	return "wifi"
+}
+
+func (e *ESP32Integration) Type() string {
+	return "telemetry"
+}
+
 type devicePayload struct {
 	DeviceID string `json:"device_id"`
 	Payload  string `json:"payload"`
@@ -47,11 +55,11 @@ func (e *ESP32Integration) Decode(envelope integrations.Envelope, payload []byte
 
 	// This is a placeholder implementation. You should replace it with actual decoding logic.
 	message := canonical.Message{
-		Type:      "telemetry",
+		Type:      e.Type(),
 		Payload:   dp.Payload,
 		Metadata:  nil, // Replace with actual metadata if needed
 		Direction: canonical.DirectionUplink,
-		Source:    canonical.Source{Integration: e.Name(), Protocol: envelope.Protocol, Network: "wifi", DeviceID: "esp32_device_id"},
+		Source:    canonical.Source{Integration: e.Name(), Protocol: envelope.Protocol, Network: e.Network(), DeviceID: dp.DeviceID},
 	}
 
 	return message, nil

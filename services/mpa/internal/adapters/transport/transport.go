@@ -1,7 +1,7 @@
 package transport
 
-import "github.com/worty76/k3s-micro-hs/services/mpa/internal/domain/message"
+import "github.com/worty76/k3s-micro-hs/libs/canonical"
 
 type MessageMapper interface {
-	Map(payload []byte) (message.Message, error)
+	Map(payload []byte) (canonical.Message, error)
 }
